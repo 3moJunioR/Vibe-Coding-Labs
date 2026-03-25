@@ -1,0 +1,16 @@
+{
+  "name": "chat-conversation-system",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Minimal conversational chat system with HTML frontend and Node backend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "dotenv": "^17.3.1"
+  }
+}

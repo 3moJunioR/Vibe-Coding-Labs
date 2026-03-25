@@ -1,0 +1,585 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Conversational Chat System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-start: #0d0f1a;
+      --bg-end: #111827;
+      --surface: rgba(255, 255, 255, 0.04);
+      --surface-hover: rgba(255, 255, 255, 0.07);
+      --border: rgba(255, 255, 255, 0.09);
+      --ink: #e8eaf0;
+      --ink-muted: #6b7a99;
+      --accent-start: #6366f1;
+      --accent-end: #8b5cf6;
+      --accent-alt-start: #0ea5e9;
+      --accent-alt-end: #38bdf8;
+      --user-bg: rgba(99, 102, 241, 0.15);
+      --user-border: rgba(99, 102, 241, 0.35);
+      --assistant-bg: rgba(14, 165, 233, 0.08);
+      --assistant-border: rgba(14, 165, 233, 0.25);
+      --sidebar-bg: rgba(255, 255, 255, 0.025);
+      --glow-indigo: rgba(99, 102, 241, 0.18);
+      --glow-sky: rgba(14, 165, 233, 0.12);
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+      --transition: 180ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+      font-size: 15px;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse 70% 50% at 10% 5%, var(--glow-indigo), transparent),
+        radial-gradient(ellipse 55% 40% at 90% 90%, var(--glow-sky), transparent),
+        radial-gradient(ellipse 40% 30% at 50% 50%, rgba(139, 92, 246, 0.06), transparent),
+        linear-gradient(160deg, var(--bg-start) 0%, var(--bg-end) 100%);
+      display: grid;
+      place-items: center;
+      padding: 20px;
+    }
+
+    /* ── App shell ───────────────────────────────────────────── */
+    .app {
+      width: min(1020px, 100%);
+      height: min(88vh, 840px);
+      background: rgba(255, 255, 255, 0.035);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+        0 28px 80px rgba(0, 0, 0, 0.55),
+        0 0 60px rgba(99, 102, 241, 0.08);
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      grid-template-rows: auto 1fr auto;
+    }
+
+    /* ── Sidebar ─────────────────────────────────────────────── */
+    .sidebar {
+      grid-row: 1 / 4;
+      border-right: 1px solid var(--border);
+      background: var(--sidebar-bg);
+      display: grid;
+      grid-template-rows: auto 1fr;
+      backdrop-filter: blur(16px);
+    }
+
+    .historyTop {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .newChatBtn {
+      width: 100%;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+      color: #fff;
+      padding: 11px 14px;
+      font-family: inherit;
+      font-size: 0.88rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: opacity var(--transition), transform var(--transition), box-shadow var(--transition);
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.35);
+    }
+
+    .newChatBtn::before {
+      content: "+ ";
+      font-size: 1.1em;
+      font-weight: 400;
+      opacity: 0.85;
+    }
+
+    .newChatBtn:hover {
+      opacity: 0.92;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 28px rgba(99, 102, 241, 0.5);
+    }
+
+    .newChatBtn:active {
+      transform: translateY(0);
+    }
+
+    #historyList {
+      list-style: none;
+      padding: 10px 8px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+    }
+
+    #historyList::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    #historyList::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 4px;
+    }
+
+    .historyItem {
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: background var(--transition), border-color var(--transition);
+    }
+
+    .historyItem:hover {
+      background: var(--surface-hover);
+      border-color: var(--border);
+    }
+
+    .historyItem.active {
+      background: rgba(99, 102, 241, 0.12);
+      border-color: rgba(99, 102, 241, 0.3);
+    }
+
+    .historyTitle {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      letter-spacing: 0.01em;
+    }
+
+    .historyMeta {
+      margin-top: 3px;
+      font-size: 0.74rem;
+      color: var(--ink-muted);
+    }
+
+    /* ── Header ──────────────────────────────────────────────── */
+    header {
+      grid-column: 2;
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    h1 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: 0.025em;
+      background: linear-gradient(90deg, #c7d2fe, #e0e7ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .badge {
+      font-size: 0.74rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #a5b4fc;
+      border: 1px solid rgba(165, 180, 252, 0.3);
+      border-radius: 999px;
+      padding: 4px 12px;
+      background: rgba(99, 102, 241, 0.1);
+    }
+
+    /* ── Chat area ───────────────────────────────────────────── */
+    #chat {
+      grid-column: 2;
+      overflow-y: auto;
+      padding: 22px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+    }
+
+    #chat::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    #chat::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+    }
+
+    .bubble {
+      max-width: min(70ch, 84%);
+      padding: 13px 16px;
+      border-radius: var(--radius-md);
+      line-height: 1.6;
+      font-size: 0.93rem;
+      animation: pop-in 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .user {
+      align-self: flex-end;
+      background: var(--user-bg);
+      border: 1px solid var(--user-border);
+      border-bottom-right-radius: 4px;
+      color: #c7d2fe;
+    }
+
+    .assistant {
+      align-self: flex-start;
+      background: var(--assistant-bg);
+      border: 1px solid var(--assistant-border);
+      border-bottom-left-radius: 4px;
+      color: #bae6fd;
+    }
+
+    /* ── Input form ──────────────────────────────────────────── */
+    form {
+      grid-column: 2;
+      border-top: 1px solid var(--border);
+      padding: 14px 18px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: end;
+      background: rgba(255, 255, 255, 0.015);
+    }
+
+    textarea {
+      resize: none;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      padding: 12px 14px;
+      min-height: 52px;
+      max-height: 140px;
+      font: inherit;
+      font-size: 0.93rem;
+      color: var(--ink);
+      background: rgba(255, 255, 255, 0.05);
+      caret-color: #6366f1;
+      transition: border-color var(--transition), background var(--transition), box-shadow var(--transition);
+      outline: none;
+      scrollbar-width: thin;
+    }
+
+    textarea::placeholder {
+      color: var(--ink-muted);
+    }
+
+    textarea:focus {
+      border-color: rgba(99, 102, 241, 0.5);
+      background: rgba(255, 255, 255, 0.07);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+    }
+
+    button {
+      border: none;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+      color: white;
+      padding: 0 22px;
+      height: 52px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+      transition: opacity var(--transition), transform var(--transition), box-shadow var(--transition);
+      box-shadow: 0 4px 18px rgba(99, 102, 241, 0.4);
+      white-space: nowrap;
+    }
+
+    button:hover:not(:disabled) {
+      opacity: 0.9;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 26px rgba(99, 102, 241, 0.55);
+    }
+
+    button:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: wait;
+      box-shadow: none;
+    }
+
+    /* ── Animations ──────────────────────────────────────────── */
+    @keyframes pop-in {
+      from {
+        transform: translateY(8px) scale(0.97);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+    }
+
+    /* ── Responsive ──────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      .app {
+        height: 95vh;
+        border-radius: var(--radius-md);
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto 1fr auto;
+      }
+
+      .sidebar {
+        grid-row: 1;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+
+      #historyList {
+        max-height: 150px;
+      }
+
+      header,
+      #chat,
+      form {
+        grid-column: 1;
+      }
+
+      .bubble {
+        max-width: 92%;
+      }
+
+      form {
+        grid-template-columns: 1fr;
+      }
+
+      button {
+        height: 44px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="app">
+    <aside class="sidebar">
+      <div class="historyTop">
+        <button class="newChatBtn" id="newChatBtn" type="button">New Chat</button>
+      </div>
+      <ul id="historyList"></ul>
+    </aside>
+
+    <header>
+      <h1>Conversational Chat System</h1>
+      <span class="badge">Context Aware</span>
+    </header>
+
+    <section id="chat" aria-live="polite"></section>
+
+    <form id="chatForm">
+      <textarea id="prompt" placeholder="Ask anything..." required></textarea>
+      <button id="sendBtn" type="submit">Send</button>
+    </form>
+  </main>
+
+  <script>
+    const HISTORY_KEY = "chat_history_v1";
+    const INITIAL_MESSAGES = [
+      { role: "user", content: "Hello" },
+      { role: "assistant", content: "Hi! How can I help you?" }
+    ];
+
+    let chats = [];
+    let currentChatId = null;
+
+    const chat = document.getElementById("chat");
+    const historyList = document.getElementById("historyList");
+    const form = document.getElementById("chatForm");
+    const promptEl = document.getElementById("prompt");
+    const sendBtn = document.getElementById("sendBtn");
+    const newChatBtn = document.getElementById("newChatBtn");
+
+    function createChat(messages = INITIAL_MESSAGES) {
+      const now = Date.now();
+      return {
+        id: `${now}-${Math.random().toString(16).slice(2, 8)}`,
+        title: "New Chat",
+        updatedAt: now,
+        messages: JSON.parse(JSON.stringify(messages))
+      };
+    }
+
+    function loadChats() {
+      try {
+        const stored = localStorage.getItem(HISTORY_KEY);
+        const parsed = stored ? JSON.parse(stored) : [];
+        chats = Array.isArray(parsed) ? parsed : [];
+      } catch {
+        chats = [];
+      }
+
+      if (chats.length === 0) {
+        const initial = createChat();
+        chats = [initial];
+        currentChatId = initial.id;
+        saveChats();
+      } else {
+        chats.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+        currentChatId = chats[0].id;
+      }
+    }
+
+    function saveChats() {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(chats));
+    }
+
+    function getCurrentChat() {
+      return chats.find((item) => item.id === currentChatId);
+    }
+
+    function setChatTitle(chatItem) {
+      const firstUser = chatItem.messages.find((m) => m.role === "user" && m.content.trim());
+      chatItem.title = firstUser ? firstUser.content.trim().slice(0, 36) : "New Chat";
+    }
+
+    function formatDate(timestamp) {
+      return new Date(timestamp).toLocaleString([], {
+        month: "short",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
+
+    function renderHistoryList() {
+      historyList.innerHTML = "";
+
+      chats
+        .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
+        .forEach((chatItem) => {
+          const li = document.createElement("li");
+          li.className = `historyItem ${chatItem.id === currentChatId ? "active" : ""}`;
+          li.dataset.id = chatItem.id;
+          li.innerHTML = `
+              <p class="historyTitle">${chatItem.title || "New Chat"}</p>
+              <div class="historyMeta">${formatDate(chatItem.updatedAt || Date.now())}</div>
+            `;
+          li.addEventListener("click", () => {
+            currentChatId = chatItem.id;
+            renderConversation();
+            renderHistoryList();
+          });
+          historyList.appendChild(li);
+        });
+    }
+
+    function addBubble(message) {
+      const el = document.createElement("div");
+      el.className = `bubble ${message.role}`;
+      el.textContent = message.content;
+      chat.appendChild(el);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    function renderConversation() {
+      const current = getCurrentChat();
+      if (!current) return;
+
+      chat.innerHTML = "";
+      for (const message of current.messages) addBubble(message);
+    }
+
+    async function fetchNextAssistantReply(fullConversation) {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ messages: fullConversation })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Request failed");
+      }
+
+      return data.reply;
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const current = getCurrentChat();
+      if (!current) return;
+
+      const text = promptEl.value.trim();
+      if (!text) return;
+
+      current.messages.push({ role: "user", content: text });
+      current.updatedAt = Date.now();
+      setChatTitle(current);
+      saveChats();
+      promptEl.value = "";
+      renderConversation();
+      renderHistoryList();
+
+      sendBtn.disabled = true;
+      const waiting = { role: "assistant", content: "Thinking..." };
+      current.messages.push(waiting);
+      renderConversation();
+
+      try {
+        const reply = await fetchNextAssistantReply(current.messages.slice(0, -1));
+        waiting.content = reply;
+      } catch (error) {
+        waiting.content = `Error: ${error.message || "I could not generate a response right now. Please try again."}`;
+      } finally {
+        current.updatedAt = Date.now();
+        saveChats();
+        sendBtn.disabled = false;
+        renderConversation();
+        renderHistoryList();
+      }
+    });
+
+    newChatBtn.addEventListener("click", () => {
+      const chatItem = createChat();
+      chats.unshift(chatItem);
+      currentChatId = chatItem.id;
+      saveChats();
+      renderConversation();
+      renderHistoryList();
+      promptEl.focus();
+    });
+
+    loadChats();
+    renderConversation();
+    renderHistoryList();
+  </script>
+</body>
+
+</html>
