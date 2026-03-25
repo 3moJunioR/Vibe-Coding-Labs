@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickSort Visualizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .input-section {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .hint {
+            color: #999;
+            font-size: 12px;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        .button-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-sort {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-sort:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-sort:active {
+            transform: translateY(0);
+        }
+
+        .btn-clear {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-clear:hover {
+            background: #e0e0e0;
+        }
+
+        .results-section {
+            display: none;
+        }
+
+        .results-section.active {
+            display: block;
+        }
+
+        .result-box {
+            background: #f9f9f9;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .result-title {
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .result-content {
+            font-size: 16px;
+            color: #333;
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+        }
+
+        .input-numbers {
+            background: #f5f5f5;
+            border-left: 4px solid #667eea;
+        }
+
+        .output-numbers {
+            background: #f0fdf4;
+            border-left: 4px solid #22c55e;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            background: #f9f9f9;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-label {
+            color: #999;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            color: #667eea;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .error {
+            background: #fef2f2;
+            color: #dc2626;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+            border: 1px solid #fecaca;
+        }
+
+        .error.active {
+            display: block;
+        }
+
+        .success {
+            background: #f0fdf4;
+            color: #22c55e;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+            border: 1px solid #bbf7d0;
+        }
+
+        .success.active {
+            display: block;
+        }
+
+        .algorithm-info {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #1e40af;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔀 QuickSort Visualizer</h1>
+        <p class="subtitle">Enter numbers and sort them using the QuickSort algorithm</p>
+
+        <!-- Error message -->
+        <div class="error" id="errorMsg"></div>
+        <div class="success" id="successMsg"></div>
+
+        <!-- Input section -->
+        <div class="input-section">
+            <label for="numberInput">Enter Numbers (comma-separated):</label>
+            <input
+                type="text"
+                id="numberInput"
+                placeholder="e.g., 64, 34, 25, 12, 22, 11, 90, 88"
+                value="3,5,2,6,1"
+            />
+            <p class="hint">Separate numbers with commas</p>
+        </div>
+
+        <!-- Button section -->
+        <div class="button-section">
+            <button class="btn-sort" onclick="sortNumbers()">Sort with QuickSort</button>
+            <button class="btn-clear" onclick="clearAll()">Clear</button>
+        </div>
+
+        <!-- Results section -->
+        <div class="results-section" id="resultsSection">
+            <div class="result-box input-numbers">
+                <div class="result-title">📥 Input Array</div>
+                <div class="result-content" id="inputArray"></div>
+            </div>
+
+            <div class="result-box output-numbers">
+                <div class="result-title">📤 Sorted Array (QuickSort)</div>
+                <div class="result-content" id="outputArray"></div>
+            </div>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-label">Array Size</div>
+                    <div class="stat-value" id="arraySize">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Execution Time</div>
+                    <div class="stat-value" id="executionTime">0ms</div>
+                </div>
+            </div>
+
+            <div class="algorithm-info">
+                <strong>ℹ️ About QuickSort:</strong> A fast divide-and-conquer sorting algorithm that picks a pivot element and partitions the array around it. Average time complexity: O(n log n)
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // QuickSort Algorithm Implementation
+        // ==========================================
+
+        /**
+         * Main QuickSort function (entry point)
+         * @param {number[]} array - The array to sort
+         */
+        function quickSort(array) {
+            if (array === null || array.length === 0)
+                return array;
+
+            quickSortRecursive(array, 0, array.length - 1);
+            return array;
+        }
+
+        /**
+         * Recursive QuickSort function
+         * Divides the array by partitioning and recursively sorts both partitions
+         * @param {number[]} array - The array being sorted
+         * @param {number} leftBound - Left index of the current subarray
+         * @param {number} rightBound - Right index of the current subarray
+         */
+        function quickSortRecursive(array, leftBound, rightBound) {
+            // Base case: if subarray has 1 or 0 elements, it's already sorted
+            if (leftBound < rightBound) {
+                // Partition and get the pivot's final position
+                let pivotIndex = partition(array, leftBound, rightBound);
+
+                // Recursively sort the left partition (smaller than pivot)
+                quickSortRecursive(array, leftBound, pivotIndex - 1);
+
+                // Recursively sort the right partition (larger than pivot)
+                quickSortRecursive(array, pivotIndex + 1, rightBound);
+            }
+        }
+
+        /**
+         * Partitions the array using the last element as pivot
+         * Rearranges so smaller elements are on the left, larger on the right
+         * @param {number[]} array - The array to partition
+         * @param {number} leftBound - Left index of partition
+         * @param {number} rightBound - Right index of partition
+         * @returns {number} The final position of the pivot
+         */
+        function partition(array, leftBound, rightBound) {
+            // Select the last element as the pivot
+            let pivot = array[rightBound];
+
+            // Index tracking the boundary between smaller and larger elements
+            let indexOfSmaller = leftBound - 1;
+
+            // Scan through all elements (except pivot)
+            for (let currentIndex = leftBound; currentIndex < rightBound; currentIndex++) {
+                // If element is smaller than pivot, move it to the left section
+                if (array[currentIndex] < pivot) {
+                    indexOfSmaller++;
+                    swap(array, indexOfSmaller, currentIndex);
+                }
+            }
+
+            // Place pivot in its correct position
+            swap(array, indexOfSmaller + 1, rightBound);
+            return indexOfSmaller + 1;
+        }
+
+        /**
+         * Swaps two elements in an array
+         * @param {number[]} array - The array
+         * @param {number} i - First index
+         * @param {number} j - Second index
+         */
+        function swap(array, i, j) {
+            let temp = array[i];
+            array[i] = array[j];
+            array[j] = temp;
+        }
+
+        // ==========================================
+        // UI Functions
+        // ==========================================
+
+        /**
+         * Main sorting function - called when user clicks the Sort button
+         */
+        function sortNumbers() {
+            // Get input value
+            const inputValue = document.getElementById('numberInput').value.trim();
+            const errorMsg = document.getElementById('errorMsg');
+            const successMsg = document.getElementById('successMsg');
+
+            // Clear previous messages
+            errorMsg.classList.remove('active');
+            successMsg.classList.remove('active');
+
+            // Validate input
+            if (!inputValue) {
+                showError('Please enter at least one number');
+                return;
+            }
+
+            try {
+                // Parse the input
+                const numbers = inputValue
+                    .split(',')
+                    .map(num => {
+                        const parsed = parseInt(num.trim());
+                        if (isNaN(parsed)) {
+                            throw new Error(`"${num.trim()}" is not a valid number`);
+                        }
+                        return parsed;
+                    });
+
+                // Check if we have numbers
+                if (numbers.length === 0) {
+                    showError('Please enter at least one number');
+                    return;
+                }
+
+                // Store the original array for display
+                const originalArray = [...numbers];
+
+                // Measure execution time
+                const startTime = performance.now();
+                
+                // Apply QuickSort
+                const sortedArray = quickSort(numbers);
+                
+                const endTime = performance.now();
+                const executionTime = (endTime - startTime).toFixed(3);
+
+                // Display results
+                displayResults(originalArray, sortedArray, executionTime);
+                showSuccess('Array sorted successfully!');
+
+            } catch (error) {
+                showError('Error: ' + error.message);
+            }
+        }
+
+        /**
+         * Displays the sorting results on the page
+         */
+        function displayResults(originalArray, sortedArray, executionTime) {
+            const resultsSection = document.getElementById('resultsSection');
+            const inputArrayDiv = document.getElementById('inputArray');
+            const outputArrayDiv = document.getElementById('outputArray');
+            const arraySizeDiv = document.getElementById('arraySize');
+            const executionTimeDiv = document.getElementById('executionTime');
+
+            // Display arrays
+            inputArrayDiv.textContent = originalArray.join(', ');
+            outputArrayDiv.textContent = sortedArray.join(', ');
+
+            // Display stats
+            arraySizeDiv.textContent = originalArray.length;
+            executionTimeDiv.textContent = executionTime + 'ms';
+
+            // Show results section
+            resultsSection.classList.add('active');
+        }
+
+        /**
+         * Shows an error message
+         */
+        function showError(message) {
+            const errorMsg = document.getElementById('errorMsg');
+            errorMsg.textContent = message;
+            errorMsg.classList.add('active');
+        }
+
+        /**
+         * Shows a success message
+         */
+        function showSuccess(message) {
+            const successMsg = document.getElementById('successMsg');
+            successMsg.textContent = message;
+            successMsg.classList.add('active');
+        }
+
+        /**
+         * Clears all inputs and results
+         */
+        function clearAll() {
+            document.getElementById('numberInput').value = '';
+            document.getElementById('resultsSection').classList.remove('active');
+            document.getElementById('errorMsg').classList.remove('active');
+            document.getElementById('successMsg').classList.remove('active');
+            document.getElementById('numberInput').focus();
+        }
+
+        // Allow sorting by pressing Enter
+        document.getElementById('numberInput').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                sortNumbers();
+            }
+        });
+
+        // Focus input on page load
+        window.addEventListener('load', function() {
+            document.getElementById('numberInput').focus();
+        });
+    </script>
+</body>
+</html>
