@@ -1,0 +1,14 @@
+# docx 
+
+*.docx
+
+# .mp4
+*.mp4
+
+# envs
+.vscode/
+.playwright-mcp/
+
+# OS generated files
+*.log
+.DS_Store
